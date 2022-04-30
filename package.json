@@ -1,0 +1,28 @@
+{
+  "name": "spotifire",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/filotti/spotifire.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/filotti/spotifire/issues"
+  },
+  "homepage": "https://github.com/filotti/spotifire#readme",
+  "dependencies": {
+    "spotify-web-api-node": "^5.0.2",
+    "express": "^4.16.3",
+    "cors": "^2.8.4",
+    "querystring": "^0.2.0",
+    "cookie-parser": "^1.4.3",
+    "node-fetch": "^2.0.0",
+    "dotenv": "^8.2.0"
+  }
+}
