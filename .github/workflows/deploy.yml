@@ -1,0 +1,19 @@
+jobs:
+  job_id:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    environment: GCP
+    steps:
+    - uses: actions/checkout@v3
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.SERVICE_ACCOUNT }}'
+
+    - name: 'Deploy to Cloud Run'
+      uses: 'google-github-actions/deploy-cloudrun@v0'
+      with:
+        image: 'gcr.io/cloudrun/hello'
+        service: 'spotifire'

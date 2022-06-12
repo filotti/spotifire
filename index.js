@@ -71,7 +71,7 @@ app.get('/playlists', async (req, res) => {
         for (item in playlists.body.items) {
             response += `
                 <p>
-                    <input type="checkbox" checked="checked" name="${playlists.body.items[item].id}">
+                    <input type="checkbox" name="${playlists.body.items[item].id}">
                     ${playlists.body.items[item].name} - ${playlists.body.items[item].description}
                 </p>
             `;
@@ -91,7 +91,10 @@ app.post('/generate', async (req, res) => {
         for (let i = 0; i < playlistIds.length; i++) {
             const playlist = await spotifyApi.getPlaylistTracks(playlistIds[i]);
             for (let j = 0; j < playlist.body.items.length; j++) {
-                if (tracks[playlist.body.items[j].track.id] === undefined) {
+                if (
+                    playlist.body.items[j].track !== null && 
+                    tracks[playlist.body.items[j].track.id] === undefined
+                    ) {
                     tracks[playlist.body.items[j].track.id] = playlist.body.items[j].track;
                 }
             }
@@ -105,10 +108,12 @@ app.post('/generate', async (req, res) => {
         const trackUris = tracks.map(track => track.uri);
         const chunkedTrackUris = chunkArray(trackUris, 100);
         for (let i = 0; i < chunkedTrackUris.length; i++) {
+            console.log(`Adding tracks ${i * 100} - ${(i + 1) * 100}`);	
             await spotifyApi.addTracksToPlaylist(playlistId, chunkedTrackUris[i]);
         }
         res.send("Playlist generated!");
     } catch (error) {
+        console.log(error);
         res.redirect('/login');
     }
 });
