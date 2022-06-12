@@ -35,9 +35,9 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: us-central1-docker.pkg.dev/spfire/images/spotifire:${{ github.sha }}
+        tags: us-central1-docker.pkg.dev/spfire/spotifire:${{ github.sha }}
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
-        image: 'us-central1-docker.pkg.dev/spfire/images/spotifire:${{ github.sha }}'
+        image: 'us-central1-docker.pkg.dev/spfire/spotifire:${{ github.sha }}'
         service: 'spotifire'
