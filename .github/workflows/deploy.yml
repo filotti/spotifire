@@ -12,15 +12,30 @@ jobs:
       id-token: 'write'
     environment: GCP
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
     - id: 'auth'
+      name: Authenticate to Google Cloud
       uses: 'google-github-actions/auth@v0'
       with:
         workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.SERVICE_ACCOUNT }}'
-
+    - name: Login to Artifact Registry
+      uses: docker/login-action@v1
+      with:
+        registry: us-central1-docker.pkg.dev
+        username: oauth2accesstoken
+        password: ${{ steps.auth.outputs.access_token }}
+    - id: docker_push
+      name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: us-central1-docker.pkg.dev/spfire/images/spotifire:${{ github.sha }}
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
-        image: 'gcr.io/cloudrun/hello'
+        image: 'gcr.io/spfire/spotifire'
         service: 'spotifire'
