@@ -1,5 +1,12 @@
+name: Deploy Spotifire to GCP
+
+on:
+  push:
+    branches: [ master ]
+
 jobs:
-  job_id:
+  deploy:
+    runs-on: ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
