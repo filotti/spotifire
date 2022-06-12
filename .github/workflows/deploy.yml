@@ -34,12 +34,12 @@ jobs:
         echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
     - id: docker_push
       name: Build and push
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         push: true
-        tags: us-central1-docker.pkg.dev/spfire/spotifire
+        tags: us-central1-docker.pkg.dev/spfire/spotifire/spotifire
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
-        image: 'us-central1-docker.pkg.dev/spfire/spotifire'
+        image: 'us-central1-docker.pkg.dev/spfire/spotifire/spotifire'
         service: 'spotifire'
