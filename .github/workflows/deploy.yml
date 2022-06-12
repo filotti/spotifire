@@ -39,5 +39,5 @@ jobs:
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
-        image: 'gcr.io/spfire/spotifire'
+        image: 'us-central1-docker.pkg.dev/spfire/images/spotifire:${{ github.sha }}'
         service: 'spotifire'
