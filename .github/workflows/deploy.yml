@@ -2,7 +2,7 @@ name: Deploy Spotifire to GCP
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   deploy:
