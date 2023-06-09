@@ -86,31 +86,22 @@ app.get('/playlists', async (req, res) => {
 
 app.post('/generate', async (req, res) => {	
     try {
-        const playlistIds = Object.keys(req.body);
         let tracks = [];
-        for (let i = 0; i < playlistIds.length; i++) {
-            const playlist = await spotifyApi.getPlaylistTracks(playlistIds[i]);
-            for (let j = 0; j < playlist.body.items.length; j++) {
-                if (
-                    playlist.body.items[j].track !== null && 
-                    tracks[playlist.body.items[j].track.id] === undefined
-                    ) {
-                    tracks[playlist.body.items[j].track.id] = playlist.body.items[j].track;
-                }
-            }
+        for (const id of Object.keys(req.body)) {
+            const playlist = await spotifyApi.getPlaylistTracks(id);
+            playlist.body.items.forEach(item => {
+                if (item.track && !tracks[item.track.id]) 
+                    tracks[item.track.id] = item.track;
+            });
         }
-        tracks = Object.values(tracks);
-        tracks.sort((a, b) => {
-            return b.popularity - a.popularity;
-        });
+        tracks = Object.values(tracks).sort((a, b) => b.popularity - a.popularity);
         const response = await spotifyApi.createPlaylist(`Generated Playlist ${new Date().toISOString()}`, { 'public': false });
         const playlistId = response.body.id;
-        const trackUris = tracks.map(track => track.uri);
-        const chunkedTrackUris = chunkArray(trackUris, 100);
-        for (let i = 0; i < chunkedTrackUris.length; i++) {
-            console.log(`Adding tracks ${i * 100} - ${(i + 1) * 100}`);	
-            await spotifyApi.addTracksToPlaylist(playlistId, chunkedTrackUris[i]);
-        }
+        const chunkedTrackUris = chunkArray(tracks.map(track => track.uri), 100);
+        chunkedTrackUris.forEach(async (chunk, i) => {
+            console.log(`Adding tracks ${i * 100} - ${(i + 1) * 100}`);
+            await spotifyApi.addTracksToPlaylist(playlistId, chunk);
+        });
         res.send("Playlist generated!");
     } catch (error) {
         console.log(error);
