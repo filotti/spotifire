@@ -36,9 +36,6 @@ jobs:
         registry: us-central1-docker.pkg.dev
         image: spfire/spotifire/spotifire
         cache: true
-        cache_registry: us-central1-docker.pkg.dev/spfire/cache
-        path: .
-        build_file: Dockerfile
         debug: true
         password: ${{ steps.auth.outputs.access_token }}
     - name: 'Deploy to Cloud Run'
