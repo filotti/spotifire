@@ -1,4 +1,4 @@
-ename: Deploy Spotifire to GCP
+name: Deploy Spotifire to GCP
 
 on:
   push:
