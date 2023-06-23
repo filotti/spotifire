@@ -22,12 +22,6 @@ jobs:
         workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
         service_account: '${{ secrets.SERVICE_ACCOUNT }}'
         access_token_lifetime: '3600s'
-    - name: Login to Artifact Registry
-      uses: docker/login-action@v1
-      with:
-        registry: us-central1-docker.pkg.dev
-        username: oauth2accesstoken
-        password: ${{ steps.auth.outputs.access_token }}
     - name: Kaniko build
       uses: aevea/action-kaniko@master
       with:
