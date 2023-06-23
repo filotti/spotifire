@@ -46,4 +46,3 @@ jobs:
         image: 'us-central1-docker.pkg.dev/spfire/spotifire/spotifire'
         service: 'spotifire'
         env_vars: 'CLIENT_ID=${{ secrets.CLIENT_ID }},CLIENT_SECRET=${{ secrets.CLIENT_SECRET }},REDIRECT_URI=${{ secrets.REDIRECT_URI }},'
-        k
