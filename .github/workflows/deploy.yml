@@ -40,6 +40,7 @@ jobs:
         path: .
         build_file: Dockerfile
         debug: true
+        password: ${{ steps.auth.outputs.access_token }}
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
