@@ -30,12 +30,22 @@ jobs:
         registry: us-central1-docker.pkg.dev
         username: oauth2accesstoken
         password: ${{ steps.auth.outputs.access_token }}
-    - id: docker_push
-      name: Build and push
-      uses: docker/build-push-action@v3
+    - name: Set version tag
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+    - uses: actions/checkout@master
+    - name: Kaniko build
+      uses: aevea/action-kaniko@master
       with:
-        push: true
-        tags: us-central1-docker.pkg.dev/spfire/spotifire/spotifire
+        registry: us-central1-docker.pkg.dev
+        image: spfire/spotifire/spotifire
+        cache: true
+        cache_registry: us-central1-docker.pkg.dev/spfire/cache
+        tag_with_latest: true
+        tag: ${{ steps.vars.outputs.sha_short }}
+        path: .
+        build_file: Dockerfile
+        debug: true
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
       with:
