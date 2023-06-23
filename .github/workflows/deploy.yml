@@ -37,7 +37,6 @@ jobs:
         image: spfire/spotifire/spotifire
         cache: true
         cache_registry: us-central1-docker.pkg.dev/spfire/cache
-p        tag_with_latest: true
         path: .
         build_file: Dockerfile
         debug: true
@@ -47,4 +46,4 @@ p        tag_with_latest: true
         image: 'us-central1-docker.pkg.dev/spfire/spotifire/spotifire'
         service: 'spotifire'
         env_vars: 'CLIENT_ID=${{ secrets.CLIENT_ID }},CLIENT_SECRET=${{ secrets.CLIENT_SECRET }},REDIRECT_URI=${{ secrets.REDIRECT_URI }},'
-        
+        k
