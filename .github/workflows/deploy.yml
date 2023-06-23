@@ -1,4 +1,4 @@
-name: Deploy Spotifire to GCP
+ename: Deploy Spotifire to GCP
 
 on:
   push:
@@ -30,10 +30,6 @@ jobs:
         registry: us-central1-docker.pkg.dev
         username: oauth2accesstoken
         password: ${{ steps.auth.outputs.access_token }}
-    - name: Set version tag
-      id: vars
-      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-    - uses: actions/checkout@master
     - name: Kaniko build
       uses: aevea/action-kaniko@master
       with:
@@ -41,8 +37,7 @@ jobs:
         image: spfire/spotifire/spotifire
         cache: true
         cache_registry: us-central1-docker.pkg.dev/spfire/cache
-        tag_with_latest: true
-        tag: ${{ steps.vars.outputs.sha_short }}
+p        tag_with_latest: true
         path: .
         build_file: Dockerfile
         debug: true
