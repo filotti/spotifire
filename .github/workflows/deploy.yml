@@ -37,6 +37,7 @@ jobs:
         image: spfire/spotifire/spotifire
         cache: true
         debug: true
+        username: oauth2accesstoken
         password: ${{ steps.auth.outputs.access_token }}
     - name: 'Deploy to Cloud Run'
       uses: 'google-github-actions/deploy-cloudrun@v0'
