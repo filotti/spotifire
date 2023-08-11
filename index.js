@@ -8,17 +8,18 @@ const SpotifyWebApi = require('spotify-web-api-node');
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const redirect_uri = process.env.REDIRECT_URI;
+const freshness_days = process.env.FRESHNESS_DAYS || 365;
 const stateKey = 'spotify_auth_state';
 
 const spotifyApi = new SpotifyWebApi();
 const app = express();
 
 app.use(express.static(__dirname + '/public'))
-   .use(cors())
-   .use(cookieParser())
-   .use(express.urlencoded( { extended: true } ));
+  .use(cors())
+  .use(cookieParser())
+  .use(express.urlencoded({extended: true}));
 
-app.get('/login', function(req, res) {
+app.get('/login', function (req, res) {
   const state = generateRandomString(16);
   res.cookie(stateKey, state);
   const scope = 'user-read-private user-read-email playlist-read-private playlist-modify-private';
@@ -31,7 +32,7 @@ app.get('/login', function(req, res) {
   res.redirect(url.href);
 });
 
-app.get('/callback', async (req, res) =>{
+app.get('/callback', async (req, res) => {
 
   const code = req.query.code || null;
   const state = req.query.state || null;
@@ -65,67 +66,88 @@ app.get('/callback', async (req, res) =>{
 });
 
 app.get('/playlists', async (req, res) => {
-    try {
-        const playlists = await spotifyApi.getUserPlaylists();
-        let response = '<form action="/generate" method="post">';
-        for (item in playlists.body.items) {
-            response += `
+  try {
+    const playlists = await spotifyApi.getUserPlaylists();
+    let response = '<form action="/generate" method="post">';
+    for (item in playlists.body.items) {
+      response += `
                 <p>
                     <input type="checkbox" name="${playlists.body.items[item].id}">
                     ${playlists.body.items[item].name} - ${playlists.body.items[item].description}
                 </p>
             `;
-        }
-        response += '<input type="submit" value="Generate Playlist"></form>';
-        res.send(response);
-    } catch (error) {
-        res.redirect('/login');
     }
+    response += '<input type="submit" value="Generate Playlist"></form>';
+
+    res.send(response);
+  } catch (error) {
+    res.redirect('/login');
+  }
 
 });
 
-app.post('/generate', async (req, res) => {	
-    try {
-        let tracks = [];
-        for (const id of Object.keys(req.body)) {
-            const playlist = await spotifyApi.getPlaylistTracks(id);
-            playlist.body.items.forEach(item => {
-                if (item.track && !tracks[item.track.id]) 
-                    tracks[item.track.id] = item.track;
-            });
-        }
-        tracks = Object.values(tracks).sort((a, b) => b.popularity - a.popularity);
-        const response = await spotifyApi.createPlaylist(`Generated Playlist ${new Date().toISOString()}`, { 'public': false });
-        const playlistId = response.body.id;
-        const chunkedTrackUris = chunkArray(tracks.map(track => track.uri), 100);
-        chunkedTrackUris.forEach(async (chunk, i) => {
-            console.log(`Adding tracks ${i * 100} - ${(i + 1) * 100}`);
-            await spotifyApi.addTracksToPlaylist(playlistId, chunk);
-        });
-        res.send("Playlist generated!");
-    } catch (error) {
-        console.log(error);
-        res.redirect('/login');
+app.post('/generate', async (req, res) => {
+  try {
+    let tracks = [];
+
+    // Fetch all playlists concurrently
+    const allPlaylists = await Promise.all(
+      Object.keys(req.body).map(
+        id => spotifyApi.getPlaylistTracks(id)
+      )
+    );
+
+    for (const playlist of allPlaylists) {
+      playlist.body.items.forEach(item => {
+        if (item.track && !tracks[item.track.id])
+          tracks[item.track.id] = item.track;
+      });
     }
+
+    tracks = Object.values(tracks).sort((a, b) => b.popularity - a.popularity);
+
+    // Filter out tracks that are older than the freshness_days
+    tracks = tracks.filter(track => {
+      const date = new Date();
+      date.setDate(date.getDate() - freshness_days);
+      return new Date(track.album.release_date) > date;
+    });
+
+    const response = await spotifyApi.createPlaylist(`Generated Playlist ${new Date().toISOString()}`, {'public': false});
+    const playlistId = response.body.id;
+
+    const chunkedTrackUris = chunkArray(tracks.map(track => track.uri), 100);
+
+    // Add all tracks to the playlist concurrently
+    await Promise.all(chunkedTrackUris.map(async (chunk, i) => {
+      console.log(`Adding tracks ${i * 100} - ${(i + 1) * 100}`);
+      await spotifyApi.addTracksToPlaylist(playlistId, chunk);
+    }));
+
+    res.send("Playlist generated!");
+  } catch (error) {
+    console.log(error);
+    res.redirect('/login');
+  }
 });
 
 console.log('Listening on 8080');
 app.listen(8080);
 
 const generateRandomString = length => {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  
-    for (let i = 0; i < length; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 };
 
 const chunkArray = (array, size) => {
-    let chunked_arr = [];
-    for (let i = 0; i < array.length; i += size) {
-        chunked_arr.push(array.slice(i, i + size));
-    }
-    return chunked_arr;
+  let chunked_arr = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunked_arr.push(array.slice(i, i + size));
+  }
+  return chunked_arr;
 }
