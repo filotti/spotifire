@@ -9,6 +9,7 @@ const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const redirect_uri = process.env.REDIRECT_URI;
 const freshness_days = process.env.FRESHNESS_DAYS || 365;
+const min_popularity = process.env.MIN_POPULARITY || 60;
 const stateKey = 'spotify_auth_state';
 
 const spotifyApi = new SpotifyWebApi();
@@ -106,12 +107,21 @@ app.post('/generate', async (req, res) => {
 
     tracks = Object.values(tracks).sort((a, b) => b.popularity - a.popularity);
 
+    console.log("Initial number of tracks: " + tracks.length);
+
+    // filter out tracks that are below the min_popularity
+    tracks = tracks.filter(track => track.popularity >= min_popularity);
+
+    console.log("Tracks after filtering for popularity: " + tracks.length);
+
     // Filter out tracks that are older than the freshness_days
     tracks = tracks.filter(track => {
       const date = new Date();
       date.setDate(date.getDate() - freshness_days);
       return new Date(track.album.release_date) > date;
     });
+
+    console.log("Tracks after filtering for release date: " + tracks.length);
 
     const response = await spotifyApi.createPlaylist(`Generated Playlist ${new Date().toISOString()}`, {'public': false});
     const playlistId = response.body.id;
